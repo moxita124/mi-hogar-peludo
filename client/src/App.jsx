@@ -66,13 +66,11 @@ function App() {
          <section id="register-screen" className="screen active">
             <div className="register-card">
               <h2>¡Vamos a conocernos!</h2>
-              
+              {/* Formulario simplificado para no ocupar espacio visual aquí */}
               <div className="form-group">
                 <label>Tu Nombre:</label>
                 <input type="text" name="ownerName" placeholder="¿Cómo te llamas?" value={formData.ownerName} onChange={handleInputChange} />
               </div>
-
-              {/* PERRITO 1 */}
               <div className="pet-section">
                 <h3>🐶 Perrito 1</h3>
                 <input type="text" name="pet1Name" placeholder="Nombre..." value={formData.pet1Name} onChange={handleInputChange} />
@@ -84,8 +82,6 @@ function App() {
                   ))}
                 </div>
               </div>
-
-              {/* PERRITO 2 */}
               <div className="pet-section">
                 <h3>🐶 Perrito 2</h3>
                 <input type="text" name="pet2Name" placeholder="Nombre..." value={formData.pet2Name} onChange={handleInputChange} />
@@ -97,51 +93,67 @@ function App() {
                   ))}
                 </div>
               </div>
-
-              <button className="btn-primary full-width" onClick={handleStart}>
-                ¡TODO LISTO! ENTRAR A CASA
-              </button>
+              <button className="btn-primary full-width" onClick={handleStart}>¡TODO LISTO! ENTRAR A CASA</button>
             </div>
          </section>
       )}
 
-      {/* --- PANTALLA 3: LA CASA --- */}
+      {/* --- PANTALLA 3: LA CASA (HUB) --- */}
       {screen === 'home' && (
         <section id="house-screen" className="screen active">
-            
-            {/* Saludo superior */}
             <div className="house-header">
               <h2>Hola, {formData.ownerName}</h2>
             </div>
 
-            {/* Perros en el sofá */}
             <div className="living-room-floor">
               <div className="pet-container">
                 <img src={getBreedImage(formData.pet1Breed)} alt={formData.pet1Name} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet1Name}</p>
               </div>
-
               <div className="pet-container">
                 <img src={getBreedImage(formData.pet2Breed)} alt={formData.pet2Name} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet2Name}</p>
               </div>
             </div>
             
-            {/* Barra de Acciones */}
+            {/* AQUÍ ESTÁ LA LÓGICA DE NAVEGACIÓN */}
             <div className="nav-bar">
-                <button className="nav-btn kitchen" onClick={() => alert("¡Vamos a la cocina!")}>
+                <button className="nav-btn kitchen" onClick={() => setScreen('kitchen')}>
                     🍖 <span className="btn-label">Comer</span>
                 </button>
-                
-                <button className="nav-btn bathroom" onClick={() => alert("¡Vamos al baño!")}>
+                <button className="nav-btn bathroom" onClick={() => setScreen('bathroom')}>
                     🛁 <span className="btn-label">Bañar</span>
                 </button>
-                
-                <button className="nav-btn garden" onClick={() => alert("¡Vamos al patio!")}>
+                <button className="nav-btn garden" onClick={() => setScreen('garden')}>
                     🎾 <span className="btn-label">Jugar</span>
                 </button>
             </div>
+        </section>
+      )}
 
+      {/* --- PANTALLAS NUEVAS (PROVISIONALES) --- */}
+      
+      {screen === 'kitchen' && (
+        <section className="screen active" style={{background: '#ffecd1', justifyContent: 'center', alignItems: 'center', flexDirection: 'column'}}>
+            <h1>🍽️ La Cocina</h1>
+            <p>Aquí vendrá la mecánica de comer.</p>
+            <button className="btn-primary" onClick={() => setScreen('home')}>Volver a la Sala</button>
+        </section>
+      )}
+
+      {screen === 'bathroom' && (
+        <section className="screen active" style={{background: '#d1f2ff', justifyContent: 'center', alignItems: 'center', flexDirection: 'column'}}>
+            <h1>🛁 El Baño</h1>
+            <p>Aquí vendrá la mecánica de bañarse.</p>
+            <button className="btn-primary" onClick={() => setScreen('home')}>Volver a la Sala</button>
+        </section>
+      )}
+
+      {screen === 'garden' && (
+        <section className="screen active" style={{background: '#d1ffdb', justifyContent: 'center', alignItems: 'center', flexDirection: 'column'}}>
+            <h1>🌳 El Patio</h1>
+            <p>Aquí vendrá el minijuego.</p>
+            <button className="btn-primary" onClick={() => setScreen('home')}>Volver a la Sala</button>
         </section>
       )}
 
