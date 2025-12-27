@@ -188,11 +188,10 @@ input[type="text"]:focus {
     background-size: cover;
     background-position: center;
     flex-direction: column;
-    justify-content: flex-end; /* Alinea todo hacia abajo */
+    justify-content: flex-end; 
     position: relative;
 }
 
-/* Header Flotante (Nombre) */
 .house-header {
     position: absolute;
     top: 30px;
@@ -213,7 +212,6 @@ input[type="text"]:focus {
     font-weight: bold;
 }
 
-/* Perros en el sofá */
 .living-room-floor {
     position: absolute;
     bottom: 20%; 
@@ -231,6 +229,7 @@ input[type="text"]:focus {
     flex-direction: column;
     align-items: center;
     animation: breathe 3s infinite ease-in-out;
+    position: relative; /* Para que la burbuja se posicione respecto al perro */
 }
 
 .pet-sprite {
@@ -253,24 +252,20 @@ input[type="text"]:focus {
     50% { transform: translateY(-4px); }
 }
 
-/* --- BARRA DE NAVEGACIÓN (FLOTANTE) --- */
 .nav-bar {
     width: 100%;
     padding: 25px;
-    /* AQUÍ ESTÁ EL CAMBIO: Fondo transparente para que se vea el suelo */
     background: transparent; 
     display: flex;
     justify-content: center;
-    gap: 40px; /* Más espacio entre botones */
+    gap: 40px; 
     z-index: 20;
-    /* Quitamos la sombra de la barra para que no se vea una caja */
-    box-shadow: none; 
 }
 
 .nav-btn {
     border: none;
     padding: 12px 25px;
-    border-radius: 25px; /* Más redonditos */
+    border-radius: 25px; 
     font-size: 1.6rem;
     cursor: pointer;
     transition: all 0.2s;
@@ -278,7 +273,6 @@ input[type="text"]:focus {
     flex-direction: column;
     align-items: center;
     min-width: 100px;
-    /* Sombra fuerte y borde blanco para que resalten sobre el dibujo */
     box-shadow: 0 6px 0 rgba(0,0,0,0.2); 
     border: 3px solid white; 
 }
@@ -290,18 +284,125 @@ input[type="text"]:focus {
     text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-/* Colores brillantes */
 .nav-btn.kitchen { background-color: #ff9f43; color: white; }
 .nav-btn.bathroom { background-color: #48dbfb; color: white; }
 .nav-btn.garden { background-color: #1dd1a1; color: white; }
 
-/* Efecto al presionar o pasar mouse */
 .nav-btn:hover {
     transform: translateY(-5px);
     filter: brightness(1.1);
 }
 
 .nav-btn:active {
-    transform: translateY(2px); /* Efecto de presionar botón físico */
+    transform: translateY(2px); 
     box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+}
+
+/* --- PANTALLA DE COCINA --- */
+#kitchen-screen {
+    background-image: url('/cocina-bg.jpg'); 
+    background-size: cover;
+    background-position: center;
+    flex-direction: column;
+    justify-content: flex-end; 
+    position: relative;
+}
+
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    font-size: 1rem;
+    z-index: 20;
+    transition: transform 0.2s;
+}
+
+.back-btn:hover {
+    transform: scale(1.1);
+    background: white;
+}
+
+.kitchen-floor {
+    position: absolute;
+    bottom: 140px; 
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 100px;
+    z-index: 5;
+    /* IMPORTANTE: Quitamos pointer-events: none para que funcione el Drag&Drop */
+}
+
+.food-bar {
+    width: 100%;
+    height: 120px;
+    background: white;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+    z-index: 20;
+    position: relative;
+}
+
+.food-item {
+    font-size: 3.5rem; 
+    cursor: grab;
+    transition: transform 0.2s;
+    user-select: none; 
+}
+
+.food-item:hover {
+    transform: scale(1.2) rotate(10deg);
+}
+
+.food-item:active {
+    cursor: grabbing;
+    transform: scale(0.9);
+}
+
+/* --- BURBUJA DE MENSAJE --- */
+.feedback-bubble {
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    color: #ff9f43;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    border: 2px solid #ff9f43;
+    animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    white-space: nowrap;
+    z-index: 50;
+    pointer-events: none;
+}
+
+/* Triangulito de la burbuja */
+.feedback-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 8px 8px 0;
+    border-style: solid;
+    border-color: #ff9f43 transparent transparent transparent;
+}
+
+@keyframes popUp {
+    0% { transform: translateX(-50%) scale(0); opacity: 0; }
+    100% { transform: translateX(-50%) scale(1); opacity: 1; }
 }
