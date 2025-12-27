@@ -1,95 +1,148 @@
-import { useState, useEffect } from 'react'; 
-import PetDisplay from "./components/PetDisplay";
+import { useState } from 'react';
+import './index.css';
+import './App.css';
 
 function App() {
-  // Estado para guardar los datos de Sasha
-  const [pet, setPet] = useState(null);
+  const [screen, setScreen] = useState('welcome');
 
-  // Función para pedir los datos al servidor
-  const fetchPet = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/pet');
-      const data = await response.json();
-      setPet(data); // Guardamos los datos en el estado
-    } catch (error) {
-      console.error("Error conectando con Sasha:", error);
-    }
+  // --- ESTADO DEL FORMULARIO (Aquí guardamos los datos) ---
+  const [formData, setFormData] = useState({
+    ownerName: '',
+    pet1Name: '',
+    pet1Breed: '',
+    pet2Name: '',
+    pet2Breed: ''
+  });
+  
+  // Lista de razas
+  const breeds = [
+    { id: 'labrador', img: '/razas/labrador.png', name: 'Labrador' },
+    { id: 'pug', img: '/razas/pug.png', name: 'Pug' },
+    { id: 'pastor', img: '/razas/pastor1.png', name: 'Pastor' }
+  ];
+
+  // Función para manejar cambios en los textos
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
-  // useEffect ejecuta esto al cargar la página por primera vez
-  useEffect(() => {
-    fetchPet();
-  }, []);
-
-  // Función para el botón "Comer"
-  const handleFeed = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/pet/feed', {
-        method: 'POST' // Es una acción, así que usamos POST
-      });
-      const updatedPet = await response.json();
-      setPet(updatedPet); // Actualizamos la vista con los nuevos datos
-    } catch (error) {
-      console.error("Error al comer:", error);
-    }
+  // Función para seleccionar raza
+  const selectBreed = (petNumber, breedId) => {
+    setFormData({ ...formData, [`pet${petNumber}Breed`]: breedId });
   };
 
-  // Función para el botón "Jugar"
-  const handlePlay = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/pet/play', {
-        method: 'POST'
-      });
-      const updatedPet = await response.json();
-      setPet(updatedPet);
-    } catch (error) {
-      console.error("Error al jugar:", error);
+  // Función para guardar y entrar
+  const handleStart = () => {
+    if (!formData.ownerName || !formData.pet1Name || !formData.pet2Name || !formData.pet1Breed || !formData.pet2Breed) {
+      alert("¡Por favor completa todos los campos para tus perritos!");
+      return;
     }
+    console.log("Datos guardados:", formData); 
+    setScreen('home'); 
   };
-
-  // Si aún no cargan los datos, mostramos "Cargando..."
-  if (!pet) return <div className="text-center mt-20">Despertando a Sasha... 😴</div>;
 
   return (
-    <div className="min-h-screen bg-slate-200 flex flex-col items-center justify-center font-sans">
+    <div id="app-container">
       
-      <h1 className="text-4xl font-bold text-slate-700 mb-4 tracking-wider">
-        {pet.name.toUpperCase()} VIRTUAL
-      </h1>
+      {/* --- PANTALLA 1: BIENVENIDA --- */}
+      {screen === 'welcome' && (
+        <section id="welcome-screen" className="screen active">
+          <div className="overlay"></div>
+          <div className="content-box">
+            <h1>Bienvenido a Casa</h1>
+            <p className="subtitle">Donde la amistad crece</p>
+            <button className="btn-primary" onClick={() => setScreen('register')}>
+              COMENZAR NUESTRA VIDA JUNTOS
+            </button>
+          </div>
+        </section>
+      )}
 
-      {/* ESTADÍSTICAS REALES */}
-      <div className="flex gap-8 mb-8 text-slate-600 font-bold bg-white px-8 py-2 rounded-full shadow-sm">
-        <p>🍖 Hambre: <span className={pet.hunger > 80 ? "text-red-500" : "text-green-500"}>{pet.hunger}%</span></p>
-        <p>⚡ Energía: {pet.energy}%</p>
-        <p>❤️ Felicidad: {pet.happiness}%</p>
-      </div>
+      {/* --- PANTALLA 2: REGISTRO --- */}
+      {screen === 'register' && (
+         <section id="register-screen" className="screen active scrollable">
+            <div className="register-card">
+              <h2>¡Vamos a conocernos!</h2>
+              
+              {/* Sección Dueño */}
+              <div className="form-group">
+                <label>Tu Nombre:</label>
+                <input 
+                  type="text" 
+                  name="ownerName" 
+                  placeholder="¿Cómo te llamas?" 
+                  value={formData.ownerName}
+                  onChange={handleInputChange}
+                />
+              </div>
 
-      {/* DIBUJO */}
-      <div className="bg-white p-10 rounded-full shadow-2xl border-8 border-white ring-4 ring-orange-200">
-        <PetDisplay />
-      </div>
+              {/* Sección Mascota 1 */}
+              <div className="pet-section">
+                <h3>🐶 Perrito 1</h3>
+                <input 
+                  type="text" 
+                  name="pet1Name" 
+                  placeholder="Nombre de tu primer perrito"
+                  value={formData.pet1Name}
+                  onChange={handleInputChange}
+                />
+                <p>Elige su raza:</p>
+                <div className="breed-options">
+                  {breeds.map((breed) => (
+                    <div 
+                      key={breed.id} 
+                      className={`breed-icon ${formData.pet1Breed === breed.id ? 'selected' : ''}`}
+                      onClick={() => selectBreed(1, breed.id)}
+                    >
+                      <img src={breed.img} alt={breed.name} />
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-      {/* BOTONES */}
-      <div className="mt-10 flex gap-4">
-        {/* BOTÓN COMER */}
-        <button 
-          onClick={handleFeed}
-          className="px-6 py-3 bg-orange-500 text-white rounded-xl font-bold shadow-lg hover:scale-105 transition active:scale-95"
-        >
-            🍖 Comer
-        </button>
+              {/* Sección Mascota 2 */}
+              <div className="pet-section">
+                <h3>🐶 Perrito 2</h3>
+                <input 
+                  type="text" 
+                  name="pet2Name" 
+                  placeholder="Nombre de tu segundo perrito"
+                  value={formData.pet2Name}
+                  onChange={handleInputChange}
+                />
+                <p>Elige su raza:</p>
+                <div className="breed-options">
+                  {breeds.map((breed) => (
+                    <div 
+                      key={breed.id} 
+                      className={`breed-icon ${formData.pet2Breed === breed.id ? 'selected' : ''}`}
+                      onClick={() => selectBreed(2, breed.id)}
+                    >
+                       <img src={breed.img} alt={breed.name} />
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-        {/* BOTÓN JUGAR (ARREGLADO) */}
-        <button 
-          onClick={handlePlay} 
-          className="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold shadow-lg hover:scale-105 transition active:scale-95"
-        >
-            🎾 Jugar
-        </button>
-      </div>
+              <button className="btn-primary full-width" onClick={handleStart}>
+                ¡TODO LISTO! ENTRAR A CASA
+              </button>
+            </div>
+         </section>
+      )}
+
+      {/* --- PANTALLA 3: HOME (Placeholder) --- */}
+      {screen === 'home' && (
+        <div style={{color: 'white', textAlign: 'center', paddingTop: '50px'}}>
+            <h1>¡Hola {formData.ownerName}!</h1>
+            <p>Aquí estarán {formData.pet1Name} y {formData.pet2Name}.</p>
+            <p>(Próximamente: La Sala de Estar)</p>
+        </div>
+      )}
 
     </div>
-  )
+  );
 }
 
 export default App;
