@@ -6,21 +6,18 @@ function App() {
   const [screen, setScreen] = useState('welcome');
   const [feedFeedback, setFeedFeedback] = useState({ show: false, pet: null, text: '' });
   
-  // Estados de los minijuegos
+  // Estados de minijuegos
   const [petCleanliness, setPetCleanliness] = useState({ pet1: false, pet2: false });
   const [score, setScore] = useState(0); 
   const [isBallThrown, setIsBallThrown] = useState(false);
-  
-  // ESTADO DEL DORMITORIO (Nuevo)
-  const [lightsOn, setLightsOn] = useState(true); // true = día, false = noche
+  const [lightsOn, setLightsOn] = useState(true); 
 
-  // --- ESTADO DEL FORMULARIO ---
+  // --- NUEVO: ESTADO PARA SELECCIÓN (CLICK/TAP en Celular) ---
+  const [selectedItem, setSelectedItem] = useState(null); // { name: 'Carne', type: 'food' }
+
+  // Estados Formulario
   const [formData, setFormData] = useState({
-    ownerName: '',
-    pet1Name: '',
-    pet1Breed: '',
-    pet2Name: '',
-    pet2Breed: ''
+    ownerName: '', pet1Name: '', pet1Breed: '', pet2Name: '', pet2Breed: ''
   });
   
   const breeds = [
@@ -57,13 +54,12 @@ function App() {
 
   const handleStart = () => {
     if (!formData.ownerName || !formData.pet1Name || !formData.pet2Name || !formData.pet1Breed || !formData.pet2Breed) {
-      alert("¡Por favor completa todos los campos!");
-      return;
+      alert("¡Por favor completa todos los campos!"); return;
     }
     setScreen('home'); 
   };
 
-  // --- FUNCIONES DEL JUEGO ---
+  // --- LÓGICA DE JUEGO ---
   const throwBall = () => {
     if (isBallThrown) return; 
     setIsBallThrown(true); 
@@ -75,67 +71,83 @@ function App() {
     }, 1000);
   };
 
-  const toggleLights = () => {
-    setLightsOn(!lightsOn); // Apaga o prende la luz
+  const toggleLights = () => setLightsOn(!lightsOn);
+
+  // --- LÓGICA HÍBRIDA: DRAG & DROP + CLICK/TAP (Para iPhone) ---
+
+  // 1. Seleccionar item con Click (Para celular)
+  const handleItemClick = (itemName, type) => {
+    // Si ya estaba seleccionado, lo deseleccionamos
+    if (selectedItem && selectedItem.name === itemName) {
+        setSelectedItem(null);
+    } else {
+        setSelectedItem({ name: itemName, type: type });
+    }
   };
 
-  // --- DRAG & DROP ---
-  const handleDragStart = (e, itemName, type) => {
-    e.dataTransfer.setData("itemName", itemName);
-    e.dataTransfer.setData("itemType", type); 
+  // 2. Acción al tocar al perro (Si hay item seleccionado)
+  const handlePetClick = (petKey, petName) => {
+    if (!selectedItem) return; // Si no hay nada seleccionado, no hace nada
+
+    applyAction(selectedItem.name, selectedItem.type, petKey, petName);
+    setSelectedItem(null); // Reseteamos selección después de usarlo
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e, petKey, petName) => {
-    e.preventDefault();
-    const itemName = e.dataTransfer.getData("itemName");
-    const itemType = e.dataTransfer.getData("itemType");
-    
+  // 3. Lógica central de acción (Compartida por Click y Drop)
+  const applyAction = (itemName, itemType, petKey, petName) => {
     if (itemType === 'food') {
         setFeedFeedback({ show: true, pet: petName, text: `¡Ñam! 😋 (${itemName})` });
         setTimeout(() => setFeedFeedback({ show: false, pet: null, text: '' }), 2000);
     }
-
     if (itemType === 'tool') {
         if (petCleanliness[petKey] === false) {
             setPetCleanliness({ ...petCleanliness, [petKey]: true }); 
             setFeedFeedback({ show: true, pet: petName, text: `¡Limpio! ✨` });
-            setTimeout(() => setFeedFeedback({ show: false, pet: null, text: '' }), 2000);
         } else {
             setFeedFeedback({ show: true, pet: petName, text: `¡Ya estoy limpio! 😄` });
-            setTimeout(() => setFeedFeedback({ show: false, pet: null, text: '' }), 2000);
         }
+        setTimeout(() => setFeedFeedback({ show: false, pet: null, text: '' }), 2000);
     }
+  };
+
+  // 4. Drag Start (Para PC)
+  const handleDragStart = (e, itemName, type) => {
+    e.dataTransfer.setData("itemName", itemName);
+    e.dataTransfer.setData("itemType", type); 
+  };
+  const handleDragOver = (e) => e.preventDefault();
+  
+  // 5. Drop (Para PC)
+  const handleDrop = (e, petKey, petName) => {
+    e.preventDefault();
+    const itemName = e.dataTransfer.getData("itemName");
+    const itemType = e.dataTransfer.getData("itemType");
+    applyAction(itemName, itemType, petKey, petName);
   };
 
   return (
     <div id="app-container">
       
-      {/* --- PANTALLA 1: BIENVENIDA --- */}
+      {/* PANTALLA BIENVENIDA */}
       {screen === 'welcome' && (
         <section id="welcome-screen" className="screen active">
           <div className="overlay"></div>
           <div className="content-box">
             <h1>Bienvenido a Casa</h1>
             <p className="subtitle">Donde la amistad crece</p>
-            <button className="btn-primary" onClick={() => setScreen('register')}>
-              COMENZAR NUESTRA VIDA JUNTOS
-            </button>
+            <button className="btn-primary" onClick={() => setScreen('register')}>COMENZAR NUESTRA VIDA JUNTOS</button>
           </div>
         </section>
       )}
 
-      {/* --- PANTALLA 2: REGISTRO --- */}
+      {/* PANTALLA REGISTRO */}
       {screen === 'register' && (
          <section id="register-screen" className="screen active">
             <div className="register-card">
               <h2>¡Vamos a conocernos!</h2>
               <div className="form-group">
                 <label>Tu Nombre:</label>
-                <input type="text" name="ownerName" placeholder="¿Cómo te llamas?" value={formData.ownerName} onChange={handleInputChange} />
+                <input type="text" name="ownerName" placeholder="Tu nombre..." value={formData.ownerName} onChange={handleInputChange} />
               </div>
               <div className="pet-section">
                 <h3>🐶 Perrito 1</h3>
@@ -159,64 +171,73 @@ function App() {
                   ))}
                 </div>
               </div>
-              <button className="btn-primary full-width" onClick={handleStart}>¡TODO LISTO! ENTRAR A CASA</button>
+              <button className="btn-primary full-width" onClick={handleStart}>¡TODO LISTO!</button>
             </div>
          </section>
       )}
 
-      {/* --- PANTALLA 3: LA CASA (HUB) --- */}
+      {/* PANTALLA HUB */}
       {screen === 'home' && (
         <section id="house-screen" className="screen active">
-            <div className="house-header">
-              <h2>Hola, {formData.ownerName}</h2>
-            </div>
+            <div className="house-header"><h2>Hola, {formData.ownerName}</h2></div>
             <div className="living-room-floor">
               <div className="pet-container">
-                <img src={getBreedImage(formData.pet1Breed)} alt={formData.pet1Name} className="pet-sprite" />
+                <img src={getBreedImage(formData.pet1Breed)} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet1Name}</p>
               </div>
               <div className="pet-container">
-                <img src={getBreedImage(formData.pet2Breed)} alt={formData.pet2Name} className="pet-sprite" />
+                <img src={getBreedImage(formData.pet2Breed)} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet2Name}</p>
               </div>
             </div>
             <div className="nav-bar">
-                <button className="nav-btn kitchen" onClick={() => setScreen('kitchen')}>
-                    🍖 <span className="btn-label">Comer</span>
-                </button>
-                <button className="nav-btn bathroom" onClick={() => setScreen('bathroom')}>
-                    🛁 <span className="btn-label">Bañar</span>
-                </button>
-                <button className="nav-btn garden" onClick={() => setScreen('garden')}>
-                    🎾 <span className="btn-label">Jugar</span>
-                </button>
-                {/* Botón Nuevo: DORMIR */}
-                <button className="nav-btn sleep" onClick={() => setScreen('bedroom')}>
-                    🌙 <span className="btn-label">Dormir</span>
-                </button>
+                <button className="nav-btn kitchen" onClick={() => setScreen('kitchen')}>🍖 <span className="btn-label">Comer</span></button>
+                <button className="nav-btn bathroom" onClick={() => setScreen('bathroom')}>🛁 <span className="btn-label">Bañar</span></button>
+                <button className="nav-btn garden" onClick={() => setScreen('garden')}>🎾 <span className="btn-label">Jugar</span></button>
+                <button className="nav-btn sleep" onClick={() => setScreen('bedroom')}>🌙 <span className="btn-label">Dormir</span></button>
             </div>
         </section>
       )}
 
-      {/* --- PANTALLA 4: COCINA --- */}
+      {/* PANTALLA COCINA */}
       {screen === 'kitchen' && (
         <section id="kitchen-screen" className="screen active">
-            <button className="back-btn" onClick={() => setScreen('home')}>⬅ Volver</button>
+            <button className="back-btn" onClick={() => {setScreen('home'); setSelectedItem(null);}}>⬅ Volver</button>
             <div className="kitchen-floor">
-              <div className="pet-container" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, 'pet1', formData.pet1Name)}>
+              {/* Perro 1: Acepta Click y Drop */}
+              <div 
+                className={`pet-container ${selectedItem ? 'can-feed' : ''}`}
+                onDragOver={handleDragOver} 
+                onDrop={(e) => handleDrop(e, 'pet1', formData.pet1Name)}
+                onClick={() => handlePetClick('pet1', formData.pet1Name)}
+              >
                 {feedFeedback.show && feedFeedback.pet === formData.pet1Name && <div className="feedback-bubble">{feedFeedback.text}</div>}
-                <img src={getBreedImage(formData.pet1Breed)} alt={formData.pet1Name} className="pet-sprite" />
+                <img src={getBreedImage(formData.pet1Breed)} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet1Name}</p>
               </div>
-              <div className="pet-container" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, 'pet2', formData.pet2Name)}>
+
+              {/* Perro 2 */}
+              <div 
+                className={`pet-container ${selectedItem ? 'can-feed' : ''}`}
+                onDragOver={handleDragOver} 
+                onDrop={(e) => handleDrop(e, 'pet2', formData.pet2Name)}
+                onClick={() => handlePetClick('pet2', formData.pet2Name)}
+              >
                 {feedFeedback.show && feedFeedback.pet === formData.pet2Name && <div className="feedback-bubble">{feedFeedback.text}</div>}
-                <img src={getBreedImage(formData.pet2Breed)} alt={formData.pet2Name} className="pet-sprite" />
+                <img src={getBreedImage(formData.pet2Breed)} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet2Name}</p>
               </div>
             </div>
+
             <div className="food-bar">
                 {foodItems.map((food) => (
-                    <div key={food.id} className="food-item" draggable={true} onDragStart={(e) => handleDragStart(e, food.name, 'food')}>
+                    <div 
+                        key={food.id} 
+                        className={`food-item ${selectedItem?.name === food.name ? 'item-selected' : ''}`}
+                        draggable={true} 
+                        onDragStart={(e) => handleDragStart(e, food.name, 'food')}
+                        onClick={() => handleItemClick(food.name, 'food')} // ¡CLICK PARA IPHONE!
+                    >
                         {food.icon}
                     </div>
                 ))}
@@ -224,27 +245,44 @@ function App() {
         </section>
       )}
 
-      {/* --- PANTALLA 5: BAÑO --- */}
+      {/* PANTALLA BAÑO */}
       {screen === 'bathroom' && (
         <section id="bathroom-screen" className="screen active">
-            <button className="back-btn" onClick={() => setScreen('home')}>⬅ Volver</button>
+            <button className="back-btn" onClick={() => {setScreen('home'); setSelectedItem(null);}}>⬅ Volver</button>
             <div className="bathroom-floor">
-              <div className={`pet-container ${!petCleanliness.pet1 ? 'pet-dirty' : ''}`} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, 'pet1', formData.pet1Name)}>
+              <div 
+                className={`pet-container ${!petCleanliness.pet1 ? 'pet-dirty' : ''} ${selectedItem ? 'can-feed' : ''}`} 
+                onDragOver={handleDragOver} 
+                onDrop={(e) => handleDrop(e, 'pet1', formData.pet1Name)}
+                onClick={() => handlePetClick('pet1', formData.pet1Name)}
+              >
                 {!petCleanliness.pet1 && <div className="dirt-icon">🪰</div>}
                 {feedFeedback.show && feedFeedback.pet === formData.pet1Name && <div className="feedback-bubble">{feedFeedback.text}</div>}
-                <img src={getBreedImage(formData.pet1Breed)} alt={formData.pet1Name} className="pet-sprite" />
+                <img src={getBreedImage(formData.pet1Breed)} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet1Name}</p>
               </div>
-              <div className={`pet-container ${!petCleanliness.pet2 ? 'pet-dirty' : ''}`} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, 'pet2', formData.pet2Name)}>
+
+              <div 
+                className={`pet-container ${!petCleanliness.pet2 ? 'pet-dirty' : ''} ${selectedItem ? 'can-feed' : ''}`} 
+                onDragOver={handleDragOver} 
+                onDrop={(e) => handleDrop(e, 'pet2', formData.pet2Name)}
+                onClick={() => handlePetClick('pet2', formData.pet2Name)}
+              >
                 {!petCleanliness.pet2 && <div className="dirt-icon">🪰</div>}
                 {feedFeedback.show && feedFeedback.pet === formData.pet2Name && <div className="feedback-bubble">{feedFeedback.text}</div>}
-                <img src={getBreedImage(formData.pet2Breed)} alt={formData.pet2Name} className="pet-sprite" />
+                <img src={getBreedImage(formData.pet2Breed)} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet2Name}</p>
               </div>
             </div>
             <div className="tools-bar">
                 {bathTools.map((tool) => (
-                    <div key={tool.id} className="tool-item" draggable={true} onDragStart={(e) => handleDragStart(e, tool.name, 'tool')}>
+                    <div 
+                        key={tool.id} 
+                        className={`tool-item ${selectedItem?.name === tool.name ? 'item-selected' : ''}`} 
+                        draggable={true} 
+                        onDragStart={(e) => handleDragStart(e, tool.name, 'tool')}
+                        onClick={() => handleItemClick(tool.name, 'tool')}
+                    >
                         {tool.icon}
                     </div>
                 ))}
@@ -252,7 +290,7 @@ function App() {
         </section>
       )}
 
-      {/* --- PANTALLA 6: PATIO --- */}
+      {/* PANTALLA PATIO */}
       {screen === 'garden' && (
         <section id="garden-screen" className="screen active">
             <button className="back-btn" onClick={() => setScreen('home')}>⬅ Volver</button>
@@ -262,11 +300,11 @@ function App() {
             )}
             <div className="garden-floor">
               <div className={`pet-container ${isBallThrown ? 'pet-jump' : ''}`}>
-                <img src={getBreedImage(formData.pet1Breed)} alt={formData.pet1Name} className="pet-sprite" />
+                <img src={getBreedImage(formData.pet1Breed)} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet1Name}</p>
               </div>
               <div className={`pet-container ${isBallThrown ? 'pet-jump' : ''}`}>
-                <img src={getBreedImage(formData.pet2Breed)} alt={formData.pet2Name} className="pet-sprite" />
+                <img src={getBreedImage(formData.pet2Breed)} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet2Name}</p>
               </div>
             </div>
@@ -274,29 +312,21 @@ function App() {
         </section>
       )}
 
-      {/* --- PANTALLA 7: DORMITORIO (NUEVO) --- */}
+      {/* PANTALLA DORMITORIO */}
       {screen === 'bedroom' && (
         <section id="bedroom-screen" className="screen active">
             <button className="back-btn" onClick={() => setScreen('home')}>⬅ Volver</button>
-            
-            {/* Capa de oscuridad (Solo visible si lightsOn es false) */}
             {!lightsOn && <div className="night-overlay"></div>}
-
-            {/* Interruptor de Luz */}
-            <div className="light-switch" onClick={toggleLights}>
-                {lightsOn ? '☀️' : '🌙'}
-            </div>
-
+            <div className="light-switch" onClick={toggleLights}>{lightsOn ? '☀️' : '🌙'}</div>
             <div className="bedroom-floor">
               <div className="pet-container">
-                {/* Si la luz está apagada, muestra los Zzz */}
                 {!lightsOn && <div className="zzz-bubble">Zzz...</div>}
-                <img src={getBreedImage(formData.pet1Breed)} alt={formData.pet1Name} className="pet-sprite" />
+                <img src={getBreedImage(formData.pet1Breed)} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet1Name}</p>
               </div>
               <div className="pet-container">
                 {!lightsOn && <div className="zzz-bubble">Zzz...</div>}
-                <img src={getBreedImage(formData.pet2Breed)} alt={formData.pet2Name} className="pet-sprite" />
+                <img src={getBreedImage(formData.pet2Breed)} className="pet-sprite" />
                 <p className="pet-name-tag">{formData.pet2Name}</p>
               </div>
             </div>
